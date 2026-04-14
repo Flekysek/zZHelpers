@@ -13,6 +13,12 @@ from zzhelpers.pfx_tools import extract_pfx, make_self_signed_pfx, wrap_to_pfx
 
 st.set_page_config(page_title="zZHelpers", layout="centered")
 
+with st.sidebar:
+    try:
+        st.image("LogoZz.jpg", use_container_width=True)
+    except Exception:
+        pass
+
 
 def _section_header(title: str, subtitle: str) -> None:
     st.title(title)
@@ -22,7 +28,17 @@ def _section_header(title: str, subtitle: str) -> None:
 def page_convert() -> None:
     _section_header("Convert", "Převod Base64 řetězce na soubor (PDF/PNG/JPG/JPEG).")
 
-    out = st.selectbox("Výstupní formát", ["pdf", "png", "jpg", "jpeg"], index=0)
+    t_pdf, t_png, t_jpg, t_jpeg = st.tabs(["PDF", "PNG", "JPG", "JPEG"])
+    out = "pdf"
+    with t_pdf:
+        out = "pdf"
+    with t_png:
+        out = "png"
+    with t_jpg:
+        out = "jpg"
+    with t_jpeg:
+        out = "jpeg"
+
     b64 = st.text_area("Base64 řetězec", height=180, placeholder="Vlož base64 řetězec nebo data URL…")
 
     col1, col2 = st.columns([1, 1])
