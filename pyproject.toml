@@ -1,0 +1,9 @@
+﻿[project]
+name = "zzhelpers"
+version = "0.1.0"
+description = "Local helper tools (Streamlit + optional HTML/Flask)."
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+

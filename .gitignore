@@ -1,0 +1,39 @@
+﻿.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.pwc
+*.pdb
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+**/.venv/
+**/venv/
+
+# Streamlit
+.streamlit/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Outputs / secrets (generated locally)
+*.pfx
+*.p12
+*.pem
+*.crt
+*.cer
+*.key
+
