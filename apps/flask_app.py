@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# Spuštění přes `python apps/flask_app.py` přidá do sys.path jen `apps/` — bez tohoto nejde importovat balíček `apps`.
+_root = Path(__file__).resolve().parent.parent
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
+
 from flask import Flask
 
 from apps.endpoints import build_api_blueprint

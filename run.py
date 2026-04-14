@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from __future__ import annotations
 
 import os
@@ -49,7 +51,8 @@ def main() -> None:
     py = _python_exe(root)
     env = os.environ.copy()
 
-    flask_cmd = [str(py), str(root / "apps" / "flask_app.py")]
+    # `-m apps.flask_app` zajišťuje správný sys.path (kořen projektu); funguje i bez ruční úpravy v flask_app.
+    flask_cmd = [str(py), "-m", "apps.flask_app"]
     streamlit_cmd = [
         str(py),
         "-m",

@@ -7,10 +7,33 @@ Sada jednoduchých lokálních helperů v Pythonu.
 
 ## Požadavky
 
-- Windows
+- Windows nebo macOS / Linux
 - Python 3.12+
 
 ## Spuštění (jeden příkaz – API i Streamlit)
+
+### macOS / Linux (zsh, bash)
+
+`run.cmd` a `run.ps1` jsou určené pro **Windows**. Na Macu použij jednu z možností:
+
+```bash
+cd /cesta/k/zZHelpers
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python run.py
+```
+
+Nebo po jednorázovém `chmod +x run.sh run.py`:
+
+```bash
+./run.sh
+# nebo
+./run.py
+```
+
+Na Unixu musí mít skript **právo spuštění** (`chmod +x`), jinak `./run.py` skončí na `permission denied`. Bez `chmod` vždy funguje `python3 run.py`.
+
+### Windows (PowerShell / CMD)
 
 ```powershell
 cd "C:\_Programs\zZHelpers"
@@ -41,7 +64,7 @@ run.cmd
 | `apps/flask_app.py` | Flask REST API (registruje endpointy) |
 | `apps/view/` | View vrstva (Streamlit UI) |
 | `apps/streamlit_app.py` | Streamlit entrypoint (volá view) |
-| `run.py`, `run.cmd`, `run.ps1` | Spuštění API + Streamlit najednou |
+| `run.py`, `run.sh`, `run.cmd`, `run.ps1` | Spuštění API + Streamlit (`run.sh` / přímé `python` = Mac/Linux; `.cmd`/`.ps1` = Windows) |
 
 ## Poznámky k bezpečnosti
 
