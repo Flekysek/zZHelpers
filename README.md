@@ -37,8 +37,10 @@ run.cmd
 | Cesta | Účel |
 |-------|------|
 | `zzhelpers/` | Sdílená logika (base64, obrázky, PFX) |
-| `apps/flask_app.py` | Flask REST API |
-| `apps/streamlit_app.py` | Streamlit – tenké UI volající API |
+| `apps/endpoints/` | Flask endpointy (Blueprints) |
+| `apps/flask_app.py` | Flask REST API (registruje endpointy) |
+| `apps/view/` | View vrstva (Streamlit UI) |
+| `apps/streamlit_app.py` | Streamlit entrypoint (volá view) |
 | `run.py`, `run.cmd`, `run.ps1` | Spuštění API + Streamlit najednou |
 
 ## Poznámky k bezpečnosti
