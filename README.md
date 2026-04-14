@@ -1,50 +1,38 @@
-﻿# zZHelpers (ZzTools)
+# zZHelpers (ZzTools)
 
 Sada jednoduchých lokálních helperů v Pythonu.
 
-- **Primární UI**: Streamlit (nejjednodušší spuštění).
-- **Alternativní UI**: HTML (`index.html`) přes lokální Flask server (localhost) + API pro zabalení cert+key → PFX.
+- **UI (View)**: Streamlit na `http://127.0.0.1:8501`.
+- **Backend (API)**: Flask na `http://127.0.0.1:5000` (Streamlit volá nástroje přes endpointy).
 
 ## Požadavky
 
 - Windows
 - Python 3.12+
 
-## Rychlé spuštění (Streamlit)
+## Spuštění (jeden příkaz – API i Streamlit)
 
 ```powershell
 cd "C:\_Programs\zZHelpers"
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m streamlit run apps\streamlit_app.py --server.address 127.0.0.1 --server.port 8501 --server.headless true --browser.gatherUsageStats false
+.\.venv\Scripts\python.exe run.py
 ```
 
-Potom stačí už jenom: 
-```powershell
-.\run_streamlit.ps1
-.\run_streamlit.cmd
-```
-
-Otevři `http://127.0.0.1:8501/`.
-
-## Spuštění (HTML přes Flask)
+Nebo z rootu repa:
 
 ```powershell
-cd "C:\_Programs\zZHelpers"
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe apps\flask_app.py
-```
-Potom stačí už jenom: 
-```powershell
-.\run_flask.ps1
-.\run_flask.cmd
+.\run.ps1
 ```
 
-Otevři `http://127.0.0.1:5000/`.
+```bat
+run.cmd
+```
+
+- API: `GET http://127.0.0.1:5000/api/health` → `ok`
+- UI: `http://127.0.0.1:8501/`
 
 ## Poznámky k bezpečnosti
 
 - Vše běží lokálně na tvém PC (localhost).
 - Hesla a klíče se nikam neodesílají mimo tvoje zařízení.
-

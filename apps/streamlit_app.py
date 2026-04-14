@@ -1,14 +1,12 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import io
 import os
 
+import requests
 import streamlit as st
 
-from zzhelpers.base64_tools import decode_base64_text
-from zzhelpers.image_tools import compress_or_resize, reformat
 from zzhelpers.io import fmt_bytes, safe_filename
-from zzhelpers.pfx_tools import extract_pfx, make_self_signed_pfx, wrap_to_pfx
 
 
 st.set_page_config(page_title="zZHelpers", layout="centered")
@@ -18,6 +16,41 @@ with st.sidebar:
         st.image("LogoZz.jpg", use_container_width=True)
     except Exception:
         pass
+
+
+API_BASE = (os.getenv("ZZHELPERS_API_BASE") or "http://127.0.0.1:5000").rstrip("/")
+
+
+def _api_url(path: str) -> str:
+    if not path.startswith("/"):
+        path = "/" + path
+    return API_BASE + path
+
+
+def _extract_filename_from_cd(content_disposition: str | None, fallback: str) -> str:
+    if not content_disposition:
+        return fallback
+    cd = content_disposition
+    # naive but good enough for local tooling
+    m = __import__("re").search(r'filename="([^"]+)"', cd)
+    if m and m.group(1):
+        return m.group(1)
+    return fallback
+
+
+def _health_badge() -> None:
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        st.caption("API")
+    with col2:
+        try:
+            r = requests.get(_api_url("/api/health"), timeout=1.5)
+            if r.ok and (r.text or "").strip().lower() == "ok":
+                st.success(f"Běží: {API_BASE}", icon=None)
+            else:
+                st.error(f"Neběží / špatná odpověď: {API_BASE}", icon=None)
+        except Exception:
+            st.error(f"Nedostupné: {API_BASE}", icon=None)
 
 
 def _section_header(title: str, subtitle: str) -> None:
@@ -55,13 +88,22 @@ def page_convert() -> None:
 
     if st.button("Připravit ke stažení", type="primary", use_container_width=True):
         try:
-            res = decode_base64_text(b64)
             fname = safe_filename(filename, default="zZToolExport")
-            st.success(f"Dekódováno: {fmt_bytes(len(res.data))}")
+            r = requests.post(
+                _api_url("/api/convert/base64"),
+                json={"b64": b64, "out": out, "filename": fname},
+                timeout=20,
+            )
+            if not r.ok:
+                raise ValueError((r.text or "").strip() or "Chyba při dekódování base64.")
+
+            data = r.content
+            st.success(f"Dekódováno: {fmt_bytes(len(data))}")
+            dl_name = _extract_filename_from_cd(r.headers.get("Content-Disposition"), f"{fname}.{out}")
             st.download_button(
                 "Stáhnout",
-                data=res.data,
-                file_name=f"{fname}.{out}",
+                data=data,
+                file_name=dl_name,
                 mime=mime,
                 use_container_width=True,
             )
@@ -92,19 +134,26 @@ def page_compress() -> None:
 
         if st.button("Vygenerovat", type="primary", use_container_width=True):
             try:
-                res = compress_or_resize(
-                    image_bytes=img.getvalue(),
-                    out_format=out_fmt,
-                    scale_percent=scale,
-                    jpeg_quality=quality,
-                    filename_base=safe_filename(base, default="image"),
-                )
-                st.image(res.data, caption=f"Výsledek ({res.width}×{res.height}, {fmt_bytes(len(res.data))})", use_container_width=True)
+                filename_base = safe_filename(base, default="image")
+                files = {"file": (img.name, img.getvalue(), img.type or "application/octet-stream")}
+                data = {
+                    "out": out_fmt,
+                    "scale_percent": str(scale),
+                    "jpeg_quality": str(quality),
+                    "filename_base": filename_base,
+                }
+                r = requests.post(_api_url("/api/image/compress"), files=files, data=data, timeout=60)
+                if not r.ok:
+                    raise ValueError((r.text or "").strip() or "Chyba při zpracování obrázku.")
+
+                out_bytes = r.content
+                dl_name = _extract_filename_from_cd(r.headers.get("Content-Disposition"), f"{filename_base}_out.jpg")
+                st.image(out_bytes, caption=f"Výsledek ({fmt_bytes(len(out_bytes))})", use_container_width=True)
                 st.download_button(
                     "Stáhnout výsledek",
-                    data=io.BytesIO(res.data),
-                    file_name=res.filename,
-                    mime=res.mime,
+                    data=io.BytesIO(out_bytes),
+                    file_name=dl_name,
+                    mime=r.headers.get("Content-Type") or "application/octet-stream",
                     use_container_width=True,
                 )
             except Exception as e:
@@ -119,18 +168,25 @@ def page_compress() -> None:
 
         if st.button("Převést", type="primary", use_container_width=True):
             try:
-                res = reformat(
-                    image_bytes=img.getvalue(),
-                    out_format=out_fmt,
-                    jpeg_quality=quality,
-                    filename_base=safe_filename(base, default="image"),
-                )
-                st.image(res.data, caption=f"Výsledek ({res.width}×{res.height}, {fmt_bytes(len(res.data))})", use_container_width=True)
+                filename_base = safe_filename(base, default="image")
+                files = {"file": (img.name, img.getvalue(), img.type or "application/octet-stream")}
+                data = {
+                    "out": out_fmt,
+                    "jpeg_quality": str(quality),
+                    "filename_base": filename_base,
+                }
+                r = requests.post(_api_url("/api/image/reformat"), files=files, data=data, timeout=60)
+                if not r.ok:
+                    raise ValueError((r.text or "").strip() or "Chyba při převodu.")
+
+                out_bytes = r.content
+                dl_name = _extract_filename_from_cd(r.headers.get("Content-Disposition"), f"{filename_base}.png")
+                st.image(out_bytes, caption=f"Výsledek ({fmt_bytes(len(out_bytes))})", use_container_width=True)
                 st.download_button(
                     "Stáhnout převedený obrázek",
-                    data=io.BytesIO(res.data),
-                    file_name=res.filename.replace("_out.", "."),
-                    mime=res.mime,
+                    data=io.BytesIO(out_bytes),
+                    file_name=dl_name,
+                    mime=r.headers.get("Content-Type") or "application/octet-stream",
                     use_container_width=True,
                 )
             except Exception as e:
@@ -164,23 +220,32 @@ def page_pfx() -> None:
 
         if st.button("Vygenerovat .pfx", type="primary", use_container_width=True, key="make_pfx"):
             try:
-                res = make_self_signed_pfx(
-                    common_name=cn,
-                    organization=o,
-                    organizational_unit=ou,
-                    locality=l,
-                    state=st_,
-                    country=c,
-                    rsa_bits=int(bits),
-                    days_valid=int(days),
-                    pfx_password=p1,
-                    pfx_password2=p2,
+                r = requests.post(
+                    _api_url("/api/pfx/make-self-signed"),
+                    json={
+                        "common_name": cn,
+                        "organization": o,
+                        "organizational_unit": ou,
+                        "locality": l,
+                        "state": st_,
+                        "country": c,
+                        "rsa_bits": int(bits),
+                        "days_valid": int(days),
+                        "pfx_password": p1,
+                        "pfx_password2": p2,
+                    },
+                    timeout=60,
                 )
+                if not r.ok:
+                    raise ValueError((r.text or "").strip() or "Chyba při generování PFX.")
+
+                pfx_bytes = r.content
+                dl_name = _extract_filename_from_cd(r.headers.get("Content-Disposition"), "certifikat.pfx")
                 st.success("Hotovo.")
                 st.download_button(
-                    f"Stáhnout {res.filename}",
-                    data=io.BytesIO(res.pfx_bytes),
-                    file_name=res.filename,
+                    f"Stáhnout {dl_name}",
+                    data=io.BytesIO(pfx_bytes),
+                    file_name=dl_name,
                     mime="application/x-pkcs12",
                     use_container_width=True,
                 )
@@ -209,20 +274,31 @@ def page_pfx() -> None:
                 if not key_file:
                     raise ValueError("Nejprve nahraj privátní klíč.")
 
-                res = wrap_to_pfx(
-                    cert_bytes=cert_file.getvalue(),
-                    key_bytes=key_file.getvalue(),
-                    chain_bytes=chain_file.getvalue() if chain_file else b"",
-                    pfx_password=pfx_password,
-                    pfx_password2=pfx_password2,
-                    key_password=key_password or None,
-                    friendly_name=(friendly_name.strip() or None),
-                )
+                files = {
+                    "cert": (cert_file.name, cert_file.getvalue(), "application/octet-stream"),
+                    "key": (key_file.name, key_file.getvalue(), "application/octet-stream"),
+                }
+                if chain_file:
+                    files["chain"] = (chain_file.name, chain_file.getvalue(), "application/octet-stream")
+
+                data = {
+                    "pfxPassword": pfx_password,
+                    "pfxPassword2": pfx_password2,
+                    "keyPassword": (key_password or "").strip(),
+                    "friendlyName": (friendly_name or "").strip(),
+                }
+
+                r = requests.post(_api_url("/api/pfx/wrap"), files=files, data=data, timeout=60)
+                if not r.ok:
+                    raise ValueError((r.text or "").strip() or "Chyba při balení.")
+
+                pfx_bytes = r.content
+                dl_name = _extract_filename_from_cd(r.headers.get("Content-Disposition"), "certifikat.pfx")
                 st.success("Hotovo.")
                 st.download_button(
-                    f"Stáhnout {res.filename}",
-                    data=io.BytesIO(res.pfx_bytes),
-                    file_name=res.filename,
+                    f"Stáhnout {dl_name}",
+                    data=io.BytesIO(pfx_bytes),
+                    file_name=dl_name,
                     mime="application/x-pkcs12",
                     use_container_width=True,
                 )
@@ -239,33 +315,39 @@ def page_pfx() -> None:
                 if not pfx_file:
                     raise ValueError("Nejprve nahraj .pfx soubor.")
 
-                res = extract_pfx(pfx_bytes=pfx_file.getvalue(), pfx_password=pfx_pass or None)
+                files = {"file": (pfx_file.name, pfx_file.getvalue(), "application/x-pkcs12")}
+                data = {"pass": (pfx_pass or "")}
+                r = requests.post(_api_url("/api/pfx/extract"), files=files, data=data, timeout=60)
+                if not r.ok:
+                    raise ValueError((r.text or "").strip() or "Chyba při rozbalování.")
+
+                res = r.json()
                 st.success("Hotovo.")
 
-                st.text_area("Certifikát (PEM)", value=res.cert_pem, height=200)
+                st.text_area("Certifikát (PEM)", value=res.get("cert_pem") or "", height=200)
                 st.download_button(
                     "Stáhnout certifikat.pem",
-                    data=res.cert_pem.encode("utf-8"),
+                    data=(res.get("cert_pem") or "").encode("utf-8"),
                     file_name="certifikat.pem",
                     mime="application/x-pem-file",
                     use_container_width=True,
                 )
 
-                if res.key_pem:
-                    st.text_area("Privátní klíč (PEM)", value=res.key_pem, height=200)
+                if res.get("key_pem"):
+                    st.text_area("Privátní klíč (PEM)", value=res.get("key_pem") or "", height=200)
                     st.download_button(
                         "Stáhnout privatni-klic.key",
-                        data=res.key_pem.encode("utf-8"),
+                        data=(res.get("key_pem") or "").encode("utf-8"),
                         file_name="privatni-klic.key",
                         mime="application/x-pem-file",
                         use_container_width=True,
                     )
 
-                if res.chain_pem:
-                    st.text_area("CA řetězec (PEM)", value=res.chain_pem, height=200)
+                if res.get("chain_pem"):
+                    st.text_area("CA řetězec (PEM)", value=res.get("chain_pem") or "", height=200)
                     st.download_button(
                         "Stáhnout chain.pem",
-                        data=res.chain_pem.encode("utf-8"),
+                        data=(res.get("chain_pem") or "").encode("utf-8"),
                         file_name="chain.pem",
                         mime="application/x-pem-file",
                         use_container_width=True,
@@ -281,5 +363,6 @@ pages = {
 }
 
 choice = st.sidebar.radio("zZHelpers", list(pages.keys()))
+_health_badge()
 pages[choice]()
 

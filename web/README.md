@@ -1,9 +1,8 @@
-﻿Tahle složka je vyhrazená pro případ, že budeš chtít HTML variantu časem oddělit od rootu.
+Tahle složka byla původně vyhrazená pro případ, že budeš chtít HTML variantu časem oddělit od rootu.
 
-Aktuálně se HTML spouští z rootu repa:
-- `index.html`
-- `controller.js`
-- `LogoZz.jpg`
+Aktuální architektura:
+- Streamlit = UI (view)
+- Flask = API backend
 
-Flask server v `apps/flask_app.py` servíruje tyto soubory přímo.
+Historická HTML varianta už se nepoužívá ani neservíruje.
 
