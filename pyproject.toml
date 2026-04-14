@@ -1,7 +1,7 @@
-﻿[project]
+[project]
 name = "zzhelpers"
 version = "0.1.0"
-description = "Local helper tools (Streamlit + optional HTML/Flask)."
+description = "Local helper tools: Streamlit UI + Flask API over zzhelpers."
 requires-python = ">=3.12"
 
 [tool.ruff]

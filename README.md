@@ -32,6 +32,15 @@ run.cmd
 - API: `GET http://127.0.0.1:5000/api/health` → `ok`
 - UI: `http://127.0.0.1:8501/`
 
+## Struktura repozitáře
+
+| Cesta | Účel |
+|-------|------|
+| `zzhelpers/` | Sdílená logika (base64, obrázky, PFX) |
+| `apps/flask_app.py` | Flask REST API |
+| `apps/streamlit_app.py` | Streamlit – tenké UI volající API |
+| `run.py`, `run.cmd`, `run.ps1` | Spuštění API + Streamlit najednou |
+
 ## Poznámky k bezpečnosti
 
 - Vše běží lokálně na tvém PC (localhost).

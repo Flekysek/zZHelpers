@@ -1,8 +1,8 @@
-﻿"""
+"""
 zZHelpers – malé lokální utility.
 
-UI vrstvy:
-- Streamlit: apps/streamlit_app.py
-- Flask (HTML): apps/flask_app.py
+- Logika: tento balíček (`zzhelpers`).
+- UI: `apps/streamlit_app.py`
+- HTTP API: `apps/flask_app.py` (volá funkce z `zzhelpers`)
 """
 
