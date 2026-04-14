@@ -22,6 +22,7 @@ python -m venv .venv
 Potom stačí už jenom: 
 ```powershell
 .\run_streamlit.ps1
+.\run_streamlit.cmd
 ```
 
 Otevři `http://127.0.0.1:8501/`.
@@ -37,6 +38,7 @@ python -m venv .venv
 Potom stačí už jenom: 
 ```powershell
 .\run_flask.ps1
+.\run_flask.cmd
 ```
 
 Otevři `http://127.0.0.1:5000/`.
