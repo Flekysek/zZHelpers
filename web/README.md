@@ -1,8 +1,1 @@
-Tahle složka byla původně vyhrazená pro případ, že budeš chtít HTML variantu časem oddělit od rootu.
-
-Aktuální architektura:
-- Streamlit = UI (view)
-- Flask = API backend
-
-Historická HTML varianta už se nepoužívá ani neservíruje.
-
+Pro budoucí HTML variantu nebo jinou webovou možnost, časem oddělit od rootu.
